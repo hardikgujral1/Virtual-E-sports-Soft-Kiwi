@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Video</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+        
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+        }
+        
+        #scoreboard {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Event Video</h1>
+    <div id="scoreboard"></div>
+    <iframe id="video-frame" width="560" height="315" frameborder="0" allowfullscreen></iframe>
+
+    <h2>Betting Odds</h2>
+    <table id="odds-table">
+        <thead>
+            <tr>
+                <th>Bet Type</th>
+                <th>Lay</th>
+                <th>Lay Text</th>
+                <th>Back</th>
+                <th>Back Text</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Betting odds will be populated here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Function to get URL parameter
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // Get event id from URL
+        const eventId = getUrlParameter('event_id');
+
+        // Fetch event data
+        fetch(`http://35.154.173.188:8000/api/getEventList`)
+            .then(response => response.json())
+            .then(data => {
+                const events = data.data.events;
+                const event = events.find(event => event.event_id == eventId);
+                if (event) {
+                    const videoUrl = event.tv_channel; // Assuming tv_channel contains the video URL
+                    document.getElementById('video-frame').src = videoUrl;
+                }
+            })
+            .catch(error => console.error('Error fetching event data:', error));
+
+        // Function to fetch betting odds
+        function fetchBettingOdds() {
+            fetch(`http://35.154.173.188:8000/api/matchData/${eventId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const oddsTableBody = document.getElementById('odds-table').getElementsByTagName('tbody')[0];
+                    oddsTableBody.innerHTML = ''; // Clear existing data
+
+                    data.forEach(odds => {
+                        const row = oddsTableBody.insertRow();
+                        for (let i = 0; i < odds.length; i++) {
+                            const cell = row.insertCell();
+                            cell.textContent = odds[i];
+                        }
+                        const statusCell = row.cells[5];
+                        if (statusCell.textContent === 'open') {
+                            row.style.backgroundColor = 'white';
+                        } else {
+                            row.style.backgroundColor = 'red';
+                        }
+                    });
+                })
+                .catch(error => console.error('Error fetching betting odds:', error));
+        }
+
+        // Function to fetch and update the scoreboard
+        function fetchScoreboard() {
+            fetch(`http://35.154.173.188:8000/api/matchScoreBoard/${eventId}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('scoreboard').innerHTML = html;
+                })
+                .catch(error => console.error('Error fetching scoreboard:', error));
+        }
+
+        // Fetch betting odds and scoreboard every second
+        setInterval(() => {
+            fetchBettingOdds();
+            fetchScoreboard();
+        }, 1000);
+    </script>
+</body>
+
+</html>
