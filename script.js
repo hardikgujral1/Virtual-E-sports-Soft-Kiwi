@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const eventList = document.getElementById('event-list');
 
-    fetch('http://35.154.173.188:8000/api/getEventList')
+    fetch('http://35.154.173.188:8000/api/getEventList?query=1')
         .then(response => response.json())
         .then(data => {
             const events = data.data.events;

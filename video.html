@@ -64,9 +64,17 @@
         const eventId = getUrlParameter('event_id');
 
         // Fetch event data
-        fetch(`http://35.154.173.188:8000/api/getEventList`)
-            .then(response => response.json())
+        fetch(`http://35.154.173.188:8000/api/getEventList?query=1`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data || !data.data || !data.data.events) {
+                    throw new Error('Invalid event data structure');
+                }
                 const events = data.data.events;
                 const event = events.find(event => event.event_id == eventId);
                 if (event) {
@@ -79,21 +87,36 @@
         // Function to fetch betting odds
         function fetchBettingOdds() {
             fetch(`http://35.154.173.188:8000/api/matchData/${eventId}`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    if (!data) {
+                        throw new Error('Invalid betting odds data structure');
+                    }
                     const oddsTableBody = document.getElementById('odds-table').getElementsByTagName('tbody')[0];
                     oddsTableBody.innerHTML = ''; // Clear existing data
 
-                    data.forEach(odds => {
+                    Object.entries(data).forEach(([betName, odds]) => {
                         const row = oddsTableBody.insertRow();
-                        for (let i = 0; i < odds.length; i++) {
-                            const cell = row.insertCell();
-                            cell.textContent = odds[i];
-                        }
-                        const statusCell = row.cells[5];
-                        if (statusCell.textContent === 'open') {
-                            row.style.backgroundColor = 'white';
-                        } else {
+                        row.insertCell().textContent = betName;
+
+                        const layCell = row.insertCell();
+                        layCell.textContent = odds.Lay;
+                        const layTextCell = row.insertCell();
+                        layTextCell.textContent = odds.LayText;
+                        const backCell = row.insertCell();
+                        backCell.textContent = odds.Back;
+                        const backTextCell = row.insertCell();
+                        backTextCell.textContent = odds.BackText;
+
+                        const statusCell = row.insertCell();
+                        statusCell.textContent = odds.Status;
+
+                        if (odds.Suspend === "1") {
                             row.style.backgroundColor = 'red';
                         }
                     });
@@ -104,7 +127,12 @@
         // Function to fetch and update the scoreboard
         function fetchScoreboard() {
             fetch(`http://35.154.173.188:8000/api/matchScoreBoard/${eventId}`)
-                .then(response => response.text())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
                 .then(html => {
                     document.getElementById('scoreboard').innerHTML = html;
                 })
