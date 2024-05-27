@@ -64,7 +64,7 @@
         const eventId = getUrlParameter('event_id');
 
         // Fetch event data
-        fetch(`http://35.154.173.188:8000/api/getEventList?query=1`)
+        fetch(`http://35.154.195.1:8000/api/getEventList?query=1`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -86,7 +86,7 @@
 
         // Function to fetch betting odds
         function fetchBettingOdds() {
-            fetch(`http://35.154.173.188:8000/api/matchData/${eventId}`)
+            fetch(`http://35.154.195.1:8000/api/matchData/${eventId}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -126,7 +126,7 @@
 
         // Function to fetch and update the scoreboard
         function fetchScoreboard() {
-            fetch(`http://35.154.173.188:8000/api/matchScoreBoard/${eventId}`)
+            fetch(`http://35.154.195.1:8000/api/matchScoreBoard/${eventId}`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
